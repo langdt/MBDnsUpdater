@@ -8,7 +8,7 @@ const ip = require('./lib/ip'),
         } = require('winston')
 
 const log = createLogger({
-    format: format.combine(format.splat(), format.simple()),
+    format: format.combine(format.timestamp(), format.splat(), format.prettyPrint()),
     transports: [
         new transports.Console()
     ]
