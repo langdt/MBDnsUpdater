@@ -1,18 +1,25 @@
 const ip = require('./lib/ip'),
     conf = require('./conf/config'),
     async = require('async'),
-        cron = require('cron'), {
-            createLogger,
-            format,
-            transports
-        } = require('winston')
+    cron = require('cron'),
+    {createLogger, format, transports} = require('winston'),
+    {combine, timestamp, printf, splat } = format
 
+const printFormatter = printf(info => {
+    return (info.timestamp + " | " +
+        info.message.split("\n")[0])
+});
 const log = createLogger({
-    format: format.combine(format.timestamp(), format.splat(), format.prettyPrint()),
+    format: combine(
+        timestamp(),
+        splat(),
+        printFormatter
+    ),
     transports: [
         new transports.Console()
     ]
 })
+
 const job = new cron.CronJob('10 * * * * *', function() {
     async.parallel({
         dns: (cb) => {
@@ -34,13 +41,11 @@ const job = new cron.CronJob('10 * * * * *', function() {
             ip.updateDNS(current_ip, (err, data) => {
                 if (err) {
                     log.error('Error updating DNS %j', err);
-                }
-                else {
+                } else {
                     log.info('Updated DNS:  %s', data)
                 }
             });
-        }
-        else {
+        } else {
             log.info('IP Address %s is up to date', current_ip)
         }
     })
